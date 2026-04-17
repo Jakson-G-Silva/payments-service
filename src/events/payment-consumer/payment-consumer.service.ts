@@ -57,7 +57,7 @@ export class PaymentConsumerService implements OnModuleInit {
       if (!this.validateMessage(message)) {
         this.logger.error('❌ Invalid payment message received');
         // Rejeitamos a mensagem para não ficar reprocessando
-        return;
+        throw new Error('Invalid payment message received');
       }
 
       // TODO: Processar pagamento usando PaymentsService
