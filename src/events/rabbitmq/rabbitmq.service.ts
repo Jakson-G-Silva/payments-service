@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   Logger,
@@ -25,6 +21,19 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.disconnect();
+  }
+
+  async waitForConnection(maxAttempts = 10, delayMs = 500): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (this.channel) {
+        return true;
+      }
+      this.logger.log(
+        `⏳ Waiting for RabbitMQ connection... (attempt ${attempt}/${maxAttempts})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    return false;
   }
 
   private async connect() {
@@ -54,11 +63,10 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       this.connection.on('unblocked', () => {
         this.logger.log('✅ RabbitMQ connection unblocked');
       });
-    } catch (error: any) {
+    } catch (error) {
       this.logger.warn(
         '⚠️ Failed to connect to RabbitMQ, cotinuing wihout message queue:',
-
-        error.message || error,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -152,6 +160,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
 
       await this.channel.prefetch(1);
 
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       await this.channel.consume(queue.queue, async (msg) => {
         if (msg) {
           try {
