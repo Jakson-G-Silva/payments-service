@@ -3,9 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { databaseConfig } from './config/database.config';
 import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(databaseConfig)],
+  imports: [TypeOrmModule.forRoot(databaseConfig), EventsModule],
   controllers: [AppController],
   providers: [AppService],
 })
